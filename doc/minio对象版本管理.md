@@ -1,8 +1,6 @@
-
-
 # 🚀 MinIO 版本管理实践指南（附完整 Go 示例）
-> 📚 标签：MinIO、Go、版本控制、对象存储、S3兼容、分布式存储
 
+> 📚 标签：MinIO、Go、版本控制、对象存储、S3兼容、分布式存储
 
 ## ✨ 前言
 
@@ -18,20 +16,20 @@ MinIO 使用 S3 API 实现对象版本控制，默认是关闭的。你可以使
 
 ```go
 import (
-	"context"
-	"log/slog"
+    "context"
+    "log/slog"
 
-	"github.com/minio/minio-go/v7"
+    "github.com/minio/minio-go/v7"
 )
 
 // EnableVersion 开启版本控制
 func EnableVersion(client *minio.Client, bucketName string) {
-	err := client.EnableVersioning(context.Background(), bucketName)
-	if err != nil {
-		slog.Info("开启版本控制失败", err)
-		return
-	}
-	slog.Info("开启版本控制成功")
+    err := client.EnableVersioning(context.Background(), bucketName)
+    if err != nil {
+        slog.Info("开启版本控制失败", err)
+        return
+    }
+    slog.Info("开启版本控制成功")
 }
 ```
 
@@ -50,17 +48,17 @@ func EnableVersion(client *minio.Client, bucketName string) {
 ```go
 // GetLatestObject 获取最新版本对象
 func GetLatestObject(client *minio.Client, bucketName, objectName string) {
-	object, err := client.GetObject(context.Background(), bucketName, objectName, minio.GetObjectOptions{})
-	if err != nil {
-		slog.Error("获取对象失败:", err)
-		return
-	}
-	defer object.Close()
+    object, err := client.GetObject(context.Background(), bucketName, objectName, minio.GetObjectOptions{})
+    if err != nil {
+        slog.Error("获取对象失败:", err)
+        return
+    }
+    defer object.Close()
 
-	// 示例：读取数据内容
-	buf := make([]byte, 1024)
-	n, _ := object.Read(buf)
-	slog.Info("对象内容：", string(buf[:n]))
+    // 示例：读取数据内容
+    buf := make([]byte, 1024)
+    n, _ := object.Read(buf)
+    slog.Info("对象内容：", string(buf[:n]))
 }
 ```
 
@@ -77,19 +75,19 @@ func GetLatestObject(client *minio.Client, bucketName, objectName string) {
 
 ```go
 func GetObjectByVersion(client *minio.Client, bucketName, objectName, versionID string) {
-	opts := minio.GetObjectOptions{}
-	opts.VersionID = versionID
+    opts := minio.GetObjectOptions{}
+    opts.VersionID = versionID
 
-	object, err := client.GetObject(context.Background(), bucketName, objectName, opts)
-	if err != nil {
-		slog.Error("根据版本获取对象失败:", err)
-		return
-	}
-	defer object.Close()
+    object, err := client.GetObject(context.Background(), bucketName, objectName, opts)
+    if err != nil {
+        slog.Error("根据版本获取对象失败:", err)
+        return
+    }
+    defer object.Close()
 
-	buf := make([]byte, 1024)
-	n, _ := object.Read(buf)
-	slog.Info("指定版本对象内容：", string(buf[:n]))
+    buf := make([]byte, 1024)
+    n, _ := object.Read(buf)
+    slog.Info("指定版本对象内容：", string(buf[:n]))
 }
 ```
 
@@ -106,14 +104,14 @@ func GetObjectByVersion(client *minio.Client, bucketName, objectName, versionID 
 
 ```go
 func DeleteObjectPermanently(client *minio.Client, bucketName, objectName, versionID string) {
-	err := client.RemoveObject(context.Background(), bucketName, objectName, minio.RemoveObjectOptions{
-		VersionID: versionID,
-	})
-	if err != nil {
-		slog.Error("物理删除对象失败：", err)
-		return
-	}
-	slog.Info("物理删除对象成功")
+    err := client.RemoveObject(context.Background(), bucketName, objectName, minio.RemoveObjectOptions{
+        VersionID: versionID,
+    })
+    if err != nil {
+        slog.Error("物理删除对象失败：", err)
+        return
+    }
+    slog.Info("物理删除对象成功")
 }
 ```
 
@@ -138,32 +136,32 @@ func DeleteObjectPermanently(client *minio.Client, bucketName, objectName, versi
 
 ```go
 func DeleteBucketWithVersions(client *minio.Client, bucketName string) {
-	ctx := context.Background()
-	opts := minio.ListObjectsOptions{
-		WithVersions: true,
-		Recursive:    true,
-	}
+    ctx := context.Background()
+    opts := minio.ListObjectsOptions{
+        WithVersions: true,
+        Recursive:    true,
+    }
 
-	for obj := range client.ListObjects(ctx, bucketName, opts) {
-		if obj.Err != nil {
-			slog.Error("列表对象失败", obj.Err)
-			continue
-		}
-		err := client.RemoveObject(ctx, bucketName, obj.Key, minio.RemoveObjectOptions{
-			VersionID: obj.VersionID,
-		})
-		if err != nil {
-			slog.Error("删除对象失败", err)
-		}
-	}
+    for obj := range client.ListObjects(ctx, bucketName, opts) {
+        if obj.Err != nil {
+            slog.Error("列表对象失败", obj.Err)
+            continue
+        }
+        err := client.RemoveObject(ctx, bucketName, obj.Key, minio.RemoveObjectOptions{
+            VersionID: obj.VersionID,
+        })
+        if err != nil {
+            slog.Error("删除对象失败", err)
+        }
+    }
 
-	// 删除桶
-	err := client.RemoveBucket(ctx, bucketName)
-	if err != nil {
-		slog.Error("删除桶失败", err)
-		return
-	}
-	slog.Info("成功删除桶和其所有版本")
+    // 删除桶
+    err := client.RemoveBucket(ctx, bucketName)
+    if err != nil {
+        slog.Error("删除桶失败", err)
+        return
+    }
+    slog.Info("成功删除桶和其所有版本")
 }
 ```
 
@@ -193,4 +191,3 @@ func DeleteBucketWithVersions(client *minio.Client, bucketName string) {
 MinIO 的版本管理功能非常强大，它不仅能帮助我们恢复误删数据，还能追踪对象的变化历史。希望本文内容能帮助你快速上手 MinIO 的版本控制能力。
 
 💬 如果你有更多关于 MinIO 或分布式存储的疑问，欢迎在评论区留言讨论！
-

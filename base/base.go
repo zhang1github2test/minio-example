@@ -58,7 +58,7 @@ func PutObject(client *minio.Client, bucketName string, fileName string, fileByt
 	if err != nil {
 		slog.Info("上传文件失败", err)
 	} else {
-		slog.Info("上传文件成功", info)
+		slog.Info("上传文件成功", "msg", info)
 	}
 }
 
