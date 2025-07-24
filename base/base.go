@@ -1,72 +1,35 @@
-# 💾 MinIO Go 客户端使用详解：对象存储开发实战指南
+package base
 
-随着云原生架构的发展，**对象存储**已成为现代数据存储的主流方式。**MinIO** 作为一款高性能、兼容 S3 协议的对象存储服务，因其部署灵活、开源透明等特性，在私有云和本地部署场景中得到了广泛应用。
-
-本文将详细介绍如何使用 **MinIO 的 Go 语言客户端（minio-go）**，实现对象的上传、下载、浏览与删除操作。内容覆盖实际开发常用操作，适合希望通过 Go 操作对象存储的工程师。
-
----
-
-## ✅ 一、准备工作
-
-### 1. 环境依赖
-
-- Go 版本：建议 Go 1.16+
-- MinIO 已部署并运行（本地或远程皆可）
-- 获取 AccessKey 和 SecretKey
-
-### 2. 安装 SDK
-
-```bash
-go get github.com/minio/minio-go/v7
-go get github.com/minio/minio-go/v7/pkg/credentials
-```
-
----
-
-## 🔧 二、初始化 MinIO 客户端
-
-```go
 import (
-"bytes"
-"context"
-"fmt"
-"github.com/minio/minio-go/v7"
-"github.com/minio/minio-go/v7/pkg/credentials"
-"io"
-"log"
-"log/slog"
-"time"
+	"bytes"
+	"context"
+	"fmt"
+	"github.com/minio/minio-go/v7"
+	"github.com/minio/minio-go/v7/pkg/credentials"
+	"io"
+	"log"
+	"log/slog"
+	"time"
 )
 
-func main() {
-    client := initMinioClient()
-}
-
 // initMinioClient 初始化minio客户端
-func initMinioClient() *minio.Client {
-    endpoint := "121.43.141.218:9000"
-    accessKeyID := "minioadmin"
-    secretAccessKey := "minioadmin"
-    useSSL := false
-    client, err := minio.New(endpoint, &minio.Options{
-    Creds:  credentials.NewStaticV4(accessKeyID, secretAccessKey, ""),
-    Secure: useSSL,
-    })
-    if err != nil {
-    log.Fatalln("初始minio客户端失败", err)
-    }
-    return client
+func InitMinioClient() *minio.Client {
+	endpoint := "121.43.141.218:9000"
+	accessKeyID := "minioadmin"
+	secretAccessKey := "minioadmin"
+	useSSL := false
+	client, err := minio.New(endpoint, &minio.Options{
+		Creds:  credentials.NewStaticV4(accessKeyID, secretAccessKey, ""),
+		Secure: useSSL,
+	})
+	if err != nil {
+		log.Fatalln("初始minio客户端失败", err)
+	}
+	return client
 }
 
-```
-
----
-
-## 📦 三、创建 Bucket（存储桶）
-
-```go
-// createBucket 如果bucket不存在则创建
-func createBucket(client *minio.Client, bucketName string) {
+// CreateBucket 如果bucket不存在则创建
+func CreateBucket(client *minio.Client, bucketName string) {
 	exists, errBucketExists := client.BucketExists(context.Background(), bucketName)
 	if errBucketExists != nil {
 		slog.Info("检查bucket是否存在失败", errBucketExists)
@@ -81,13 +44,7 @@ func createBucket(client *minio.Client, bucketName string) {
 		}
 	}
 }
-```
 
----
-
-## ⬆️ 四、上传对象
-
-```go
 // PutObject 上传文件到minio,这里直接使用byte[]
 func PutObject(client *minio.Client, bucketName string, fileName string, fileBytes []byte) {
 	ctx := context.Background()
@@ -130,13 +87,6 @@ func PresignedPutObject(client *minio.Client, bucketName string, fileName string
 	slog.Info("获取到的上传外链信息为", "url", u.String())
 }
 
-```
-
----
-
-## ⬇️ 五、下载对象
-
-```go
 // DownloadAsFile 下载文件到本地,直接存储为本地文件
 func DownloadAsFile(client *minio.Client, bucketName string, fileName string, filePath string) error {
 	ctx := context.Background()
@@ -148,9 +98,8 @@ func DownloadAsFile(client *minio.Client, bucketName string, fileName string, fi
 	return nil
 }
 
-
 // DownloadAsByte 下载文件,直接以[]byte返回
-func DownloadAsByte(client *minio.Client, bucketName string, fileName string, filePath string) ([]byte, error) {
+func DownloadAsByte(client *minio.Client, bucketName string, fileName string) ([]byte, error) {
 	ctx := context.Background()
 	object, err := client.GetObject(ctx, bucketName, fileName, minio.GetObjectOptions{})
 	if err != nil {
@@ -205,13 +154,18 @@ func PresignedGetObject(client *minio.Client, bucketName string, fileName string
 	}
 	slog.Info("获取到的外链信息为", "url", u.String())
 }
-```
 
----
+// RemoveObject 删除文件
+func RemoveObject(client *minio.Client, bucketName string, fileName string) {
+	ctx := context.Background()
+	err := client.RemoveObject(ctx, bucketName, fileName, minio.RemoveObjectOptions{})
+	if err != nil {
+		slog.Info("删除对象失败", "桶名", bucketName, "文件名", fileName, "错误信息", err)
+		return
+	}
+	slog.Info("删除对象成功", "桶名", bucketName, "文件名", fileName)
+}
 
-## 📂 六、列出对象列表
-
-```go
 // ListObjects 列出对象列表
 func ListObjects(client *minio.Client, bucketName string) {
 	ctx := context.Background()
@@ -228,45 +182,3 @@ func ListObjects(client *minio.Client, bucketName string) {
 		slog.Info("获取到的对象列表为", "文件名", obj.Key, "大小", obj.Size)
 	}
 }
-```
-
----
-
-## 🗑️ 七、删除对象
-
-```go
-// RemoveObject 删除文件
-func RemoveObject(client *minio.Client, bucketName string, fileName string) {
-	ctx := context.Background()
-	err := client.RemoveObject(ctx, bucketName, fileName, minio.RemoveObjectOptions{})
-	if err != nil {
-		slog.Info("删除对象失败", "桶名", bucketName, "文件名", fileName, "错误信息", err)
-		return
-	}
-}
-```
-
-## 
-
-## 🔚 八、总结
-
-MinIO Go SDK 提供了简洁高效的 API，适合各类后台服务接入对象存储系统。通过本文的学习，你应该能够完成：
-
-* MinIO 客户端初始化；
-* Bucket 创建与检查；
-* 对象上传、下载、列出、删除；
-* 常见问题排查。
-
-如果你在开发日志存储、图片归档、数据备份等系统中需要接入 S3 存储接口，MinIO 是非常优秀且易用的选择。
-
----
-
-### 📌 推荐阅读：
-
-* [MinIO 官方文档](https://docs.min.io/)
-* [MinIO Go SDK GitHub](https://github.com/minio/minio-go)
-
----
-
-如果觉得本文有帮助，欢迎点赞👍、评论💬、收藏⭐，持续更新更多 **对象存储 + 云原生 + Go 编程** 实战教程！
-
