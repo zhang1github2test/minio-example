@@ -22,12 +22,6 @@
 
 如果你是一名后端工程师、运维专家、数据平台构建者或 DevOps 从业者，这将是你迈向企业级对象存储架构的重要一课。
 
----
-
-将这段内容放在教程前，可以让读者快速把握教程的重点与深度，同时也为后续扩展埋下伏笔，引导读者持续关注和学习。
-
-如需我帮你把整篇文章整体结构化整理（如：添加目录、章节导航、Markdown 样式优化等），也可以继续告诉我。
-
 官网地址：https://min.io/docs/minio/linux/operations/install-deploy-manage/deploy-minio-multi-node-multi-drive.html
 
 
