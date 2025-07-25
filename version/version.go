@@ -5,7 +5,6 @@ import (
 	"context"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
-	"github.com/minio/minio-go/v7/pkg/lifecycle"
 	"io"
 	"log"
 	"log/slog"
@@ -52,25 +51,6 @@ func EnableVersion(client *minio.Client, bucketName string) {
 		return
 	}
 	slog.Info("开启版本控制成功")
-}
-
-// SetLifeCycle 设置生命周期
-func SetLifeCycle(client *minio.Client, bucketName string) {
-	config := lifecycle.NewConfiguration()
-	config.Rules = []lifecycle.Rule{
-		{
-			ID:     "expire-30day-lifecycle",
-			Status: "Enabled",
-			// 当前
-			Expiration: lifecycle.Expiration{
-				Days: 30,
-			},
-			NoncurrentVersionExpiration: lifecycle.NoncurrentVersionExpiration{
-				NoncurrentDays: 1,
-			},
-		},
-	}
-	client.SetBucketLifecycle(context.Background(), bucketName, config)
 }
 
 // DeleteObjectForce 强制删除对象
