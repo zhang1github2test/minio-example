@@ -53,3 +53,14 @@ echo "🧪 测试：docker run hello-world"
 
 ```
 
+```shell
+sudo mkdir -p /etc/docker
+sudo tee /etc/docker/daemon.json <<-'EOF'
+{
+  "registry-mirrors": ["https://94pzr3so.mirror.aliyuncs.com","https://docker.1ms.run"]
+}
+EOF
+sudo systemctl daemon-reload
+sudo systemctl restart docker
+```
+
