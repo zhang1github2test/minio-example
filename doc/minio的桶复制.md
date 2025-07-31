@@ -43,11 +43,98 @@ mc mb dst-minio/mybucket
         mc ls dst-minio/BUCKET
     ```
     如果在目标实例上能够看到复制过来的对象，说明复制成功。
+  * 查看已经配置的复制规则
+    ```shell
+        mc replicate list src-minio/mybucket
+    ```
+    输出结果：
+    ```txt
+    Rules:
+    Remote Bucket: 172.18.0.1:19000/mybucket
+    Rule ID: d249gahsnv9im354pqc0
+    Priority: 0
+    ARN: arn:minio:replication::da9655e8-4ff9-497f-89e2-adbe91ab287e:mybucket
+    ```
+   * **Remote Bucket**
+
+     * 复制的目标桶。
+    * 结构为：`<目标地址>/<目标桶名>`。
+    * 示例：`172.18.0.1:19000/mybucket` 表示目标 MinIO 实例的 `mybucket` 桶。
+
+    * **Rule ID**
+
+      * 当前复制规则的唯一标识符。
+      * 系统自动生成，用于后续规则管理，如修改、删除。
+
+    * **Priority**
+
+      * 复制规则的优先级，值越小优先级越高。
+      * 当多个规则同时匹配某个对象时，优先级高（值小）的规则生效。
+      * 默认值通常为 `0`（最高优先级）。
+
+    * **ARN**（Amazon Resource Name）
+
+      * 用于唯一标识该复制规则所属的资源。
+      * 格式：`arn:minio:replication::<MinIO实例ID>:<源桶名>`。
+      * 示例：`arn:minio:replication::da9655e8-4ff9-497f-89e2-adbe91ab287e:mybucket`
+
+          * `da9655e8-4ff9-497f-89e2-adbe91ab287e`：MinIO 实例唯一 ID。
+          * `mybucket`：当前桶名。
+
+
+  * 禁用桶复制
+    ```shell
+    mc replicate disable src-minio/mybucket
+    ```
+    * 禁用后查看具体的规则的复制状态
+      ```shell
+      root@iZbp17vix2j58ya7sc3b9lZ:~# mc replicate export src-minio/mybucket
+      {
+      "Rules": [
+          {
+              "ID": "d249gahsnv9im354pqc0",
+              "Status": "Disabled",
+              "Priority": 0,
+              "DeleteMarkerReplication": {
+                  "Status": "Enabled"
+                  },
+              "DeleteReplication": {
+                  "Status": "Enabled"
+                  },
+              "Destination": {
+                  "Bucket": "arn:minio:replication::da9655e8-4ff9-497f-89e2-adbe91ab287e:mybucket"
+                  },
+              "Filter": {
+                  "And": {},
+                  "Tag": {}
+                  },
+              "SourceSelectionCriteria": {
+                  "ReplicaModifications": {
+                      "Status": "Enabled"
+                      }
+              },
+              "ExistingObjectReplication": {
+                  "Status": "Enabled"
+                  }
+          }
+      ],
+      "Role": ""
+      }
+      ```
+      可以看出来,当前复制规则已经被禁用了。 "Status": "Disabled"
+    * 移除复制规则
+      ```shell
+        mc replicate rm  --id "d249gahsnv9im354pqc0" src-minio/mybucket
+      ```
+    > 如果当前的桶只有一条复制规则，minio是不允许删除的。
+    root@iZbp17vix2j58ya7sc3b9lZ:~# mc replicate rm  --id "d249gahsnv9im354pqc0" src-minio/mybucket
+    mc: <ERROR> Could not remove replication rule: replication configuration should have at least one rule.
+      
 ### 1.2 双向复制
   双向复制是指在两个 MinIO 实例之间建立双向复制关系，数据可以在两个实例之间双向同步。
   * 配置源实例的复制规则
     ```shell
-    mc replicate add src-minio/BUCKET \
+    mc replicate add src-minio/mybucket \
     --remote-bucket 'http://minioadmin:minioadmin@172.18.0.1:19000/mybucket' \
     --replicate "delete,delete-marker,existing-objects"
     ```
@@ -69,10 +156,15 @@ mc mb dst-minio/mybucket
     如果在目标实例上和源实例上都能够看到复制过来的对象，说明复制成功。
 ## 二、客户端的桶复制
 minio的客户端复制的源头可以是文件系统，minio集群，或其他S3兼容的对象存储服务。
-基于文件系统的复制
+### 2.1 基于文件系统的复制
 ```shell
    mkdir ~/file-system-test  && cd ~/file-system-test
    mc mirror --watch ~/file-system-test src-minio/mybucket
+```
+
+### 2.2 基于minio集群的复制
+```shell
+   mc mirror  src-minio/mybucket dst-minio/mybucket
 ```
 
 ## 三、注意事项
