@@ -1,11 +1,9 @@
 ## 🌟前言
-  在对象存储系统中，数据可靠性 和 业务连续性 是企业级部署绕不开的核心话题。MinIO 作为一款高性能的分布式对象存储服务，
-  提供了功能强大的 桶复制（Bucket Replication） 机制，可实现数据跨站点、跨机房乃至跨云的复制能力，
-  广泛应用于灾难恢复（Disaster Recovery）、数据同步、多活部署等场景。
+​          在对象存储系统中，数据可靠性 和 业务连续性 是企业级部署绕不开的核心话题。MinIO 作为一款高性能的分布式对象存储服务，提供了功能强大的 桶复制（Bucket Replication） 机制，可实现数据跨站点、跨机房乃至跨云的复制能力，广泛应用于灾难恢复（Disaster Recovery）、数据同步、多活部署等场景。
 ## 一、服务端复制
  两个minio实例的数据
-| 源实例      (src-minio)                                 | 目标实例 (dst-minio)                                   | 
-|------------------------------------------------------|------------------------------------------------------| 
+| 源实例      (src-minio)                                 | 目标实例 (dst-minio)                                   |
+|------------------------------------------------------|------------------------------------------------------|
 | http://minioadmin:minioadmin@172.18.0.1:9000/mybucket | http://minioadmin:minioadmin@172.18.0.1:19000/mybucket |
 
 
@@ -22,7 +20,7 @@ mc mb dst-minio/mybucket
     mc version enable src-minio/mybucket
     mc version enable dst-minio/mybucket
 ```
-    
+
 
 ### 1.1 单向复制
   单向复制是指将数据从一个 MinIO 实例复制到另一个 MinIO 实例，复制方向是单向的。 单向复制的配置相对简单，只需要在源实例上配置复制规则，指定目标实例即可。
@@ -58,21 +56,21 @@ mc mb dst-minio/mybucket
    * **Remote Bucket**
 
      * 复制的目标桶。
-    * 结构为：`<目标地址>/<目标桶名>`。
-    * 示例：`172.18.0.1:19000/mybucket` 表示目标 MinIO 实例的 `mybucket` 桶。
+        * 结构为：`<目标地址>/<目标桶名>`。
+        * 示例：`172.18.0.1:19000/mybucket` 表示目标 MinIO 实例的 `mybucket` 桶。
 
-    * **Rule ID**
+        * **Rule ID**
 
       * 当前复制规则的唯一标识符。
       * 系统自动生成，用于后续规则管理，如修改、删除。
 
-    * **Priority**
+        * **Priority**
 
       * 复制规则的优先级，值越小优先级越高。
       * 当多个规则同时匹配某个对象时，优先级高（值小）的规则生效。
       * 默认值通常为 `0`（最高优先级）。
 
-    * **ARN**（Amazon Resource Name）
+        * **ARN**（Amazon Resource Name）
 
       * 用于唯一标识该复制规则所属的资源。
       * 格式：`arn:minio:replication::<MinIO实例ID>:<源桶名>`。
@@ -129,7 +127,7 @@ mc mb dst-minio/mybucket
     > 如果当前的桶只有一条复制规则，minio是不允许删除的。
     root@iZbp17vix2j58ya7sc3b9lZ:~# mc replicate rm  --id "d249gahsnv9im354pqc0" src-minio/mybucket
     mc: <ERROR> Could not remove replication rule: replication configuration should have at least one rule.
-      
+    
 ### 1.2 双向复制
   双向复制是指在两个 MinIO 实例之间建立双向复制关系，数据可以在两个实例之间双向同步。
   * 配置源实例的复制规则

@@ -91,3 +91,13 @@ func ListCannedPolicies(client *madmin.AdminClient) {
 		slog.Info("msg", key, value)
 	}
 }
+
+func AddUserGroup(client *madmin.AdminClient, groupsName string, username ...string) {
+	err := client.UpdateGroupMembers(context.Background(), madmin.GroupAddRemove{
+		Group:   groupsName,
+		Members: username,
+	})
+	if err != nil {
+		slog.Error("添加用户组失败", "msg", err)
+	}
+}

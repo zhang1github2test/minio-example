@@ -156,7 +156,7 @@ func DeleteUser(client *madmin.AdminClient, username string) {
 
 ## 📎 推荐阅读
 
-* [MinIO 官方文档 - 用户管理](https://min.io/docs/minio/linux/administration/identity-access-management/minio-user-management.html)
+* [MinIO 官方文档 - 用户管理](https://docs.min.io/community/minio-object-store/administration/identity-access-management/minio-user-management.html)
 * [MinIO 权限策略详解](https://docs.min.io/community/minio-object-store/administration/identity-access-management/policy-based-access-control.html)
 
 如果你觉得本文对你有帮助，欢迎点赞 👍 收藏 ⭐ 留言 💬，让更多人看到！
