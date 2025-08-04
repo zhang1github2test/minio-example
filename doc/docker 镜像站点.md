@@ -12,3 +12,7 @@
 | [https://docker.367231.xyz](https://docker.367231.xyz)                 | 1Panel 核心用户 GXL 驱动  | Cloudflare       |                              |
 
 
+root@iZbp17vix2j58ya7sc3b9lZ:~/docker-compose-grafana# cat /etc/docker/daemon.json
+{
+"registry-mirrors": ["https://94pzr3so.mirror.aliyuncs.com","https://docker.1ms.run"]
+}

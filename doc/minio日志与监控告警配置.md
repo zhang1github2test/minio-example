@@ -42,11 +42,10 @@ services:
    * 使用环境变量配置
 ```shell
       MINIO_AUDIT_WEBHOOK_ENABLE_first: "on"
-      MINIO_AUDIT_WEBHOOK_ENDPOINT_first: "http://8.136.102.104:8095/server-log"
+      MINIO_AUDIT_WEBHOOK_ENDPOINT_first: "http://172.17.73.139:8095/server-log"
       MINIO_AUDIT_WEBHOOK_AUTH_TOKEN_first: "TOKEN"
-```
-   * 使用mc命令行工具来配置
-```shell
+
+shell
    # 语法
    mc admin config set ALIAS/ audit_webhook:IDENTIFIER  \
    endpoint="https://webhook-1.example.net"     
@@ -68,6 +67,10 @@ MINIO_AUDIT_WEBHOOK_AUTH_TOKEN_{id}: 标识审核webhook需要使用的token
     export  MINIO_NOTIFY_WEBHOOK_ENDPOINT_first: "http://172.17.73.139:8095/event-log"
     # 重启minio
     mc admin service restart minio2
+    
+    mc admin config set minio2/ notify_webhook:IDENTIFIER \
+   endpoint="http://172.17.73.139:8095/event-log" 
+    
 ```
 ### 3.2、获取事件通知的ARN
 
@@ -86,12 +89,16 @@ mc event add minio2/mybucket arn:minio:sqs::first:webhook \
 ```
 [支持的事件类型参考][https://docs.min.io/community/minio-object-store/reference/minio-mc/mc-event-add.html#mc-event-supported-events]
 
+### 3.4、验证事件
+```shell
+     mc put docker-compose.yml minio2/mybucket
+```
 ### 四、推送事件信息到mysql中
 #### 4.1、配置
 ```shell
     # 使用环境变量
      MINIO_NOTIFY_MYSQL_ENABLE_first="on"
-     MINIO_NOTIFY_MYSQL_DSN_STRING_first="remote_user:RemoteUserPassword@123@tcp(116.62.226.77:3306)/syx"
+     MINIO_NOTIFY_MYSQL_DSN_STRING_first="remote_user:RemoteUserPassword@123@tcp(localhost:3306)/syx"
      MINIO_NOTIFY_MYSQL_TABLE_first="minio-events"
      MINIO_NOTIFY_MYSQL_FORMAT_first="namespace"
      
@@ -106,7 +113,7 @@ mc event add minio2/mybucket arn:minio:sqs::first:webhook \
        comment="<string>"
     
     mc admin config set  minio2 notify_mysql:first \
-      dsn_string="remote_user:RemoteUserPassword@123@tcp(116.62.226.77:3306)/syx" \
+      dsn_string="remote_user:RemoteUserPassword@123@tcp(localhost:3306)/syx" \
       table="minioevents" \
       format="namespace" 
       # 重启服务
@@ -131,3 +138,112 @@ mc event add minio2/mybucket arn:minio:sqs::_:mysql \
 ```
 然后查看mysql中是否有数据
 
+## 五、监控管理
+### 5.1、使用docker安装prometheus
+```shell
+mkdir -p ~/prometheus/config
+cd ~/prometheus/config
+
+# 创建prometheus的配置文件
+vi  prometheus.yml
+# prometheus.yml
+global:
+  scrape_interval: 15s  # 每 15 秒抓取一次目标
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+# 创建prometheus容器
+docker run -d \
+  --name prometheus \
+  -p 9090:9090 \
+  -v ~/prometheus/config:/etc/prometheus/ \
+  prom/prometheus
+```
+
+### 5.2、生成prometheus使用的监控时的token
+```shell
+root@iZbp17vix2j58ya7sc3b9lZ:~/prometheus/config# mc admin prometheus generate minio2 
+scrape_configs:
+- job_name: minio-job
+  bearer_token: eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJwcm9tZXRoZXVzIiwic3ViIjoibWluaW9hZG1pbiIsImV4cCI6NDkwNzkxODMxNX0.AN0QiamO_Np_2eeKPxZWf30ttlak01q--v9KI4mPMiWX3XLt4fkGJ8A8Le2_1Rs0r7QOZ4fA1Hug4_zVtTq7wA
+  metrics_path: /minio/v2/metrics/cluster
+  scheme: http
+  static_configs:
+  - targets: ['localhost:19000']
+```
+这里的localhost需要换成docker0网卡地址
+
+
+### 5.3、重启prometheus
+```shell
+  docker restart pormetheus
+```
+
+### 5、4 验证数据是否已经采集到
+
+访问对应的地址信息：
+http://121.43.30.5:9090/graph?g0.expr=minio_cluster_usage_objects_count&g0.tab=1&g0.stacked=0&g0.show_exemplars=0&g0.range_input=1h
+
+
+### 5.5、添加minio的监控告警规则
+#minio-alerting.yml
+
+```yml
+groups:
+- name: minio-alerts
+  rules:
+    - alert: NodesOffline
+      expr: avg_over_time(minio_cluster_nodes_offline_total{job="minio-job"}[5m]) > 0
+      for: 10m
+      labels:
+      severity: warn
+      annotations:
+      summary: "Node down in MinIO deployment"
+      description: "Node(s) in cluster {{ $labels.instance }} offline for more than 5 minutes"
+
+    - alert: DisksOffline
+      expr: avg_over_time(minio_cluster_drive_offline_total{job="minio-job"}[5m]) > 0
+      for: 10m
+      labels:
+      severity: warn
+      annotations:
+      summary: "Disks down in MinIO deployment"
+      description: "Disks(s) in cluster {{ $labels.instance }} offline for more than 5 minutes"
+```
+在prometheus的配置规则中添加
+```yml
+    rule_files:
+    - minio-alerting.yml
+```
+
+### 5.5、配置可视化看板Grafana
+* 安装grafana
+```shell
+  mkdir -p ~/docker-compose-grafana
+  cd ~/docker-compose-grafana
+ #docker-compose.yml
+services:
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"   # 本地访问 http://localhost:3000
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana-storage:/var/lib/grafana
+
+volumes:
+  grafana-storage:
+
+docker compose up -d
+```
+* 打开grafana地址
+  http://localhost:3000
+* 配置prometheus源
+* 导入minio的看板数据
+从下面地址下载：https://grafana.com/grafana/dashboards/13502-minio-dashboard/
