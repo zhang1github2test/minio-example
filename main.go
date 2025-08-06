@@ -15,7 +15,6 @@ func main() {
 	// 定义一个 POST 路由来接收稽核日志
 	r.POST("/audit", func(c *gin.Context) {
 		var auditLog map[string]interface{}
-
 		// 绑定 JSON 数据到 auditLog 变量
 		if err := c.ShouldBindJSON(&auditLog); err != nil {
 			// 如果解析失败，返回 400 错误
