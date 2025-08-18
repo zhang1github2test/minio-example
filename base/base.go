@@ -14,7 +14,7 @@ import (
 
 // initMinioClient 初始化minio客户端
 func InitMinioClient() *minio.Client {
-	endpoint := "121.43.141.218:9000"
+	endpoint := "127.0.0.1:9000"
 	accessKeyID := "minioadmin"
 	secretAccessKey := "minioadmin"
 	useSSL := false
