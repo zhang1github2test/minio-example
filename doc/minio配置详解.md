@@ -1,18 +1,16 @@
 
 
-### MinIO配置项速查表
-
-本文将MinIO的主要配置项按照功能模块进行分类，并以表格形式清晰地展示了每个配置项的环境变量、`mc`命令、功能描述、默认值和关键注意事项。
+### MinIO配置项详解
 
 > **配置优先级说明**: 当同一配置项同时通过环境变量和 `mc admin config set` 命令设置时，**MinIO会优先采用环境变量的值**。
 
-https://min.io/docs/minio/linux/reference/minio-server/settings.html
+https://docs.min.io/community/minio-object-store/reference/minio-server/settings.html
 
 #### 核心配置 (Core Settings)
 
 这些配置项控制MinIO服务的核心行为。
 
-| 配置项 (Configuration Item) | 环境变量 (Environment Variable)      | mc admin config 命令 / 顶级键  | 默认值 (Default Value)                                       | 描述 (Description)                                           |
+| 配置项 (Configuration Item) | 环境变量 (Environment Variable)      | mc admin config 命令           | 默认值 (Default Value)                                       | 描述 (Description)                                           |
 | :-------------------------- | :----------------------------------- | :----------------------------- | :----------------------------------------------------------- | :----------------------------------------------------------- |
 | **服务器启动选项**          | `MINIO_OPTS`                         | 不适用                         | 无                                                           | 定义 `minio server` 启动时附加的命令行参数。                 |
 | **存储卷**                  | `MINIO_VOLUMES`                      | 不适用                         | 无（启动时必需）                                             | 指定MinIO用作后端的存储目录或驱动器。                        |
@@ -33,11 +31,11 @@ https://min.io/docs/minio/linux/reference/minio-server/settings.html
 
 这些配置项控制拥有超级管理员权限的根用户的访问。
 
-| 配置项 (Configuration Item) | 环境变量 (Environment Variable) | mc admin config 命令 / 顶级键 | 默认值 (Default Value) | 描述 (Description)                                           |
-| :-------------------------- | :------------------------------ | :---------------------------- | :--------------------- | :----------------------------------------------------------- |
-| **根用户名**                | `MINIO_ROOT_USER`               | `root_user`                   | `minioadmin`           | 根用户的访问密钥。**切勿在生产中使用默认值**。               |
-| **根用户密码**              | `MINIO_ROOT_PASSWORD`           | `root_password`               | `minioadmin`           | 根用户的秘密密钥。**切勿在生产中使用默认值**。               |
-| **根用户API访问**           | `MINIO_API_ROOT_ACCESS`         | `api root_access`             | `on`                   | 设置为 `off` 可禁用根用户账户。禁用前务必创建其他管理员账户。 |
+| 配置项 (Configuration Item) | 环境变量 (Environment Variable) | mc admin config 命令 | 默认值 (Default Value) | 描述 (Description)                                           |
+| :-------------------------- | :------------------------------ | :------------------- | :--------------------- | :----------------------------------------------------------- |
+| **根用户名**                | `MINIO_ROOT_USER`               | `root_user`          | `minioadmin`           | 根用户的访问密钥。**切勿在生产中使用默认值**。               |
+| **根用户密码**              | `MINIO_ROOT_PASSWORD`           | `root_password`      | `minioadmin`           | 根用户的秘密密钥。**切勿在生产中使用默认值**。               |
+| **根用户API访问**           | `MINIO_API_ROOT_ACCESS`         | `api root_access`    | `on`                   | 设置为 `off` 可禁用根用户账户。禁用前务必创建其他管理员账户。 |
 
 ---
 
@@ -45,11 +43,11 @@ https://min.io/docs/minio/linux/reference/minio-server/settings.html
 
 这些配置项定义了数据的冗余和可用性策略。
 
-| 配置项 (Configuration Item) | 环境变量 (Environment Variable) | mc admin config 命令 / 顶级键 | 默认值 (Default Value)                          | 描述 (Description)                                           |
-| :-------------------------- | :------------------------------ | :---------------------------- | :---------------------------------------------- | :----------------------------------------------------------- |
-| **标准存储类**              | `MINIO_STORAGE_CLASS_STANDARD`  | `storage_class standard`      | 依赖于纠删集大小（例如8-16个驱动器默认为 EC:4） | 为`STANDARD`存储类设置奇偶校验级别，格式为 `EC:M`。          |
-| **低冗余存储类**            | `MINIO_STORAGE_CLASS_RRS`       | `storage_class rrs`           | 驱动器数>1时为`EC:1`，=1时为`EC:0`              | 为`REDUCED_REDUNDANCY`存储类设置奇偶校验级别。               |
-| **奇偶校验保留优化**        | `MINIO_STORAGE_CLASS_OPTIMIZE`  | `storage_class optimize`      | 未设置（默认行为是提升奇偶校验）                | 设置为 `capacity` 可优先保证集群容量，而不是提升对象的奇偶校验级别。 |
+| 配置项 (Configuration Item) | 环境变量 (Environment Variable) | mc admin config 命令     | 默认值 (Default Value)                          | 描述 (Description)                                           |
+| :-------------------------- | :------------------------------ | :----------------------- | :---------------------------------------------- | :----------------------------------------------------------- |
+| **标准存储类**              | `MINIO_STORAGE_CLASS_STANDARD`  | `storage_class standard` | 依赖于纠删集大小（例如8-16个驱动器默认为 EC:4） | 为`STANDARD`存储类设置奇偶校验级别，格式为 `EC:M`。          |
+| **低冗余存储类**            | `MINIO_STORAGE_CLASS_RRS`       | `storage_class rrs`      | 驱动器数>1时为`EC:1`，=1时为`EC:0`              | 为`REDUCED_REDUNDANCY`存储类设置奇偶校验级别。               |
+| **奇偶校验保留优化**        | `MINIO_STORAGE_CLASS_OPTIMIZE`  | `storage_class optimize` | 未设置（默认行为是提升奇偶校验）                | 设置为 `capacity` 可优先保证集群容量，而不是提升对象的奇偶校验级别。 |
 
 ---
 
@@ -57,16 +55,16 @@ https://min.io/docs/minio/linux/reference/minio-server/settings.html
 
 这些配置项用于管理嵌入式的Web控制台。
 
-| 配置项 (Configuration Item) | 环境变量 (Environment Variable)  | mc admin config 命令 / 顶级键 | 默认值 (Default Value) | 描述 (Description)                                    |
-| :-------------------------- | :------------------------------- | :---------------------------- | :--------------------- | :---------------------------------------------------- |
-| **启用/禁用控制台**         | `MINIO_BROWSER`                  | `browser`                     | `on` (启用)            | 设置为 `off` 可禁用嵌入式MinIO控制台。                |
-| **控制台重定向**            | `MINIO_BROWSER_REDIRECT`         | `browser redirect`            | `true`                 | 是否将来自浏览器的请求自动重定向到控制台。            |
-| **控制台重定向URL**         | `MINIO_BROWSER_REDIRECT_URL`     | `browser redirect_url`        | 无（监听所有主机IP）   | 指定控制台监听的FQDN，用于反向代理场景。              |
-| **控制台会话时长**          | `MINIO_BROWSER_SESSION_DURATION` | `browser session_duration`    | `12h`                  | 设置控制台登录会话的持续时间。                        |
-| **HSTS秒数**                | `MINIO_BROWSER_HSTS_SECONDS`     | `browser hsts_seconds`        | `0` (禁用)             | 启用HSTS（HTTP严格传输安全）并设置 `max-age` 的秒数。 |
-| **Prometheus URL**          | `MINIO_PROMETHEUS_URL`           | `prometheus url`              | 无                     | 指定用于抓取MinIO指标的Prometheus服务URL。            |
-| **Prometheus Job ID**       | `MINIO_PROMETHEUS_JOB_ID`        | `prometheus job_id`           | `minio-job`            | 指定Prometheus抓取任务的ID。                          |
-| **Prometheus认证令牌**      | `MINIO_PROMETHEUS_AUTH_TOKEN`    | `prometheus auth_token`       | 无                     | 指定控制台连接到Prometheus时使用的Basic Auth令牌。    |
+| 配置项 (Configuration Item) | 环境变量 (Environment Variable)  | mc admin config 命令       | 默认值 (Default Value) | 描述 (Description)                                    |
+| :-------------------------- | :------------------------------- | :------------------------- | :--------------------- | :---------------------------------------------------- |
+| **启用/禁用控制台**         | `MINIO_BROWSER`                  | `browser`                  | `on` (启用)            | 设置为 `off` 可禁用嵌入式MinIO控制台。                |
+| **控制台重定向**            | `MINIO_BROWSER_REDIRECT`         | `browser redirect`         | `true`                 | 是否将来自浏览器的请求自动重定向到控制台。            |
+| **控制台重定向URL**         | `MINIO_BROWSER_REDIRECT_URL`     | `browser redirect_url`     | 无（监听所有主机IP）   | 指定控制台监听的FQDN，用于反向代理场景。              |
+| **控制台会话时长**          | `MINIO_BROWSER_SESSION_DURATION` | `browser session_duration` | `12h`                  | 设置控制台登录会话的持续时间。                        |
+| **HSTS秒数**                | `MINIO_BROWSER_HSTS_SECONDS`     | `browser hsts_seconds`     | `0` (禁用)             | 启用HSTS（HTTP严格传输安全）并设置 `max-age` 的秒数。 |
+| **Prometheus URL**          | `MINIO_PROMETHEUS_URL`           | `prometheus url`           | 无                     | 指定用于抓取MinIO指标的Prometheus服务URL。            |
+| **Prometheus Job ID**       | `MINIO_PROMETHEUS_JOB_ID`        | `prometheus job_id`        | `minio-job`            | 指定Prometheus抓取任务的ID。                          |
+| **Prometheus认证令牌**      | `MINIO_PROMETHEUS_AUTH_TOKEN`    | `prometheus auth_token`    | 无                     | 指定控制台连接到Prometheus时使用的Basic Auth令牌。    |
 
 ---
 
@@ -74,7 +72,7 @@ https://min.io/docs/minio/linux/reference/minio-server/settings.html
 
 这些配置项用于将MinIO的运行状态导出到外部系统。
 
-| 配置项 (Configuration Item) | 环境变量 (Environment Variable)      | mc admin config 命令 / 顶级键  | 默认值 (Default Value) | 描述 (Description)                                           |
+| 配置项 (Configuration Item) | 环境变量 (Environment Variable)      | mc admin config 命令           | 默认值 (Default Value) | 描述 (Description)                                           |
 | :-------------------------- | :----------------------------------- | :----------------------------- | :--------------------- | :----------------------------------------------------------- |
 | **Prometheus认证类型**      | `MINIO_PROMETHEUS_AUTH_TYPE`         | `prometheus auth_type`         | `jwt`                  | `/metrics`端点的认证模式。`jwt`（需要令牌）或 `public`（公开）。 |
 | **启用服务器日志Webhook**   | `MINIO_LOGGER_WEBHOOK_ENABLE[_ID]`   | `logger_webhook[_ID] enable`   | `off`                  | 设置为 `on` 以将服务器日志发送到Webhook。                    |
